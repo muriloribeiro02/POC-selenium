@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exibição de Dados</title>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+   <style>
+        body {
+            padding: 20px;
+        }
+        forms {
+            display: flex;
+            justify-content: space-between;
+            margin: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="text-center">Exibição de Dados</h1>
+        <forms>
+            <form id="deleteForm" method="POST">
+                <button type="submit" class="btn btn-danger">Deletar os dados selecionados</button>
+            </form>
+            <form method="POST" action="/atualizarDados">
+            <button type="submit" class="btn btn-primary">Atualizar os dados</button>
+        </form>
+            </forms>
+        <div class="table-responsive">
+            <table class="table table-bordered">
+                <colgroup>
+                    <col style="width: 5%" />
+                    <col style="width: 15%" />
+                    <col style="width: 40%" />
+                    <col style="width: 8%" />
+                    <col style="width: 8%" />
+                    <col style="width: 8%" />
+                    <col style="width: 8%" />
+                    <col style="width: 8%" />
+                </colgroup>
+                <thead class="thead-dark">
+                    <tr>
+                        <th>Selecionar</th>
+                        <th>Nº</th>
+                        <th>Campo</th>
+                        <th>Descrição</th>
+                        <th>Tipo</th>
+                        <th>Tam.</th>
+                        <th>Dec.</th>
+                        <th>Entr.</th>
+                        <th>Saída</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in rows %}
+                        <tr>
+                            <td><input type="checkbox" name="selecionar[]" value="{{ row[0] }}"></td>
+                            <td>{{ row[0] }}</td>
+                            <td>{{ row[1] }}</td>
+                            <td>{{ row[2] }}</td>
+                            <td>{{ row[3] }}</td>
+                            <td>{{ row[4] }}</td>
+                            <td>{{ row[5] }}</td>
+                            <td>{{ row[6] }}</td>
+                            <td>{{ row[7] }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.12.9/dist/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var deleteForm = document.getElementById("deleteForm");
+
+            if (deleteForm) {
+                deleteForm.addEventListener("submit", function (event) {
+                    event.preventDefault();
+                    if (verificarSelecao()) {
+                        removerLinhasSelecionadas();
+                    } else {
+                        alert("Selecione pelo menos um item para deletar.");
+                    }
+                });
+            }
+        });
+
+        function verificarSelecao() {
+            var selectedCheckboxes = document.querySelectorAll('input[name="selecionar[]"]:checked');
+            return selectedCheckboxes.length > 0;
+        }
+
+        function removerLinhasSelecionadas() {
+            var selectedCheckboxes = document.querySelectorAll('input[name="selecionar[]"]:checked');
+            var selectedIds = Array.from(selectedCheckboxes).map(function (checkbox) {
+                return checkbox.value;
+            });
+
+            if (selectedIds.length === 0) {
+                alert("Nenhum item selecionado para deletar.");
+                return;
+            }
+
+            fetch('/deletarDados', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ selected_ids: selectedIds })
+            })
+            .then(response => {
+                if (response.ok) {
+                    return response.json();
+                } else {
+                    throw new Error("Erro ao deletar itens. Tente novamente.");
+                }
+            })
+            .then(data => {
+                if (data.success) {
+                    window.location.href = '/';
+                } else {
+                    throw new Error("Erro ao deletar itens. Tente novamente.");
+                }
+            })
+            .catch(error => {
+                alert(error.message);
+            });
+        }
+    </script>
+</body>
+</html>
